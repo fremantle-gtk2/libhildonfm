@@ -8,7 +8,7 @@ Standards-Version: 3.6.0
 Package: libhildonfm2
 Section: libs
 Architecture: any
-Depends: ${shlibs:Depends}, ${misc:Depends}, hildon-fm-l10n-mr | hildon-fm-l10n-mr0, gnome-vfs-filechooser-backend
+Depends: ${shlibs:Depends}, ${misc:Depends}, hildon-fm-l10n-mr | hildon-fm-l10n-mr0, gnome-vfs-filechooser-backend, kernel-feature-errata-430973-workaround
 Description: Hildon file management libraries.
  Hildon file management widgets: Hildon file chooser, file selector,
  File Open/Save dialog, file details dialog.
@@ -35,7 +35,7 @@ Description: Documentation for libhildonfm2
 Package: hildon-fm1
 Section: libs
 Architecture: any
-Depends: libhildonfm2 (= ${Source-Version})
+Depends: libhildonfm2 (= ${Source-Version}), kernel-feature-errata-430973-workaround
 Description: hildon-fm1 compatibility kluge.
 
 Package: hildon-fm-dev

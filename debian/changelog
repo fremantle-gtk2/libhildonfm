@@ -1,3 +1,9 @@
+libhildonfm (1:2.28.22+0cssu2-thumb1) unstable; urgency=low
+
+  * add kernel errata dependency
+
+ -- Ivaylo Dimitrov <freemangordon@abv.bg>  Fri, 15 Jun 2012 17:11:44 +0300
+
 libhildonfm (1:2.28.22+0cssu2-thumb0) unstable; urgency=low
 
   * Thumb2 compiled
