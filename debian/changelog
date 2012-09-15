@@ -1,4 +1,4 @@
-libhildonfm (1:2.28.22+0cssu2-thumb1) unstable; urgency=low
+libhildonfm (1:2.28.22+0cssu2+thumb1) unstable; urgency=low
 
   * add kernel errata dependency
 
