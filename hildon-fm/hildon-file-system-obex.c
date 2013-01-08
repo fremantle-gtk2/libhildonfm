@@ -37,6 +37,12 @@
 #include "hildon-file-common-private.h"
 
 
+#define BT_GCONF_DEVICE  "/system/bluetooth/device/xx:xx:xx:xx:xx:xx/"
+#define BT_GCONF_DEVICE_ADDR_INDEX  25
+
+#define BT_BDA_LENGTH               17
+#define BT_URI_BDA_INDEX            8
+
 static void
 hildon_file_system_obex_class_init (HildonFileSystemObexClass *klass);
 static void
@@ -52,7 +58,7 @@ hildon_file_system_obex_create_child_location (HildonFileSystemSpecialLocation *
 
 static gboolean
 hildon_file_system_obex_is_visible (HildonFileSystemSpecialLocation *location,
-				    gboolean has_children);
+                                    gboolean has_children);
 
 G_DEFINE_TYPE (HildonFileSystemObex,
                hildon_file_system_obex,
@@ -108,7 +114,7 @@ hildon_file_system_obex_init (HildonFileSystemObex *device)
     location = HILDON_FILE_SYSTEM_SPECIAL_LOCATION (device);
     location->compatibility_type = HILDON_FILE_SYSTEM_MODEL_GATEWAY;
     location->fixed_icon = g_strdup ("general_bluetooth");
-    location->fixed_title = g_strdup (_("sfil_li_bluetooth"));
+    location->fixed_title = g_strdup (dgettext("osso-connectivity-ui", "conn_ti_bluetooth_cpa"));
     location->failed_access_message = NULL;
 
     device->bonding_handler_id =
@@ -197,7 +203,7 @@ hildon_file_system_obex_create_child_location (HildonFileSystemSpecialLocation *
 
         child->basepath = g_strdup (uri);
         child->failed_access_message = _("sfil_ib_cannot_connect_device");
-	child->permanent = FALSE;
+        child->permanent = FALSE;
     }
 
     return child;
@@ -205,7 +211,7 @@ hildon_file_system_obex_create_child_location (HildonFileSystemSpecialLocation *
 
 static gboolean
 hildon_file_system_obex_is_visible (HildonFileSystemSpecialLocation *location,
-				    gboolean has_children)
+                                    gboolean has_children)
 {
   return has_children;
 }
@@ -313,7 +319,7 @@ static gchar *_get_icon_from_uri (gchar *uri)
 {
     GConfClient *gconf_client;
     gchar *ret = NULL;
-    gchar key[] = "/system/bluetooth/device/xx:xx:xx:xx:xx:xx/icon";
+    gchar key[] = BT_GCONF_DEVICE "icon";
 
     g_assert (uri != NULL);
     gconf_client = gconf_client_get_default ();
@@ -322,9 +328,9 @@ static gchar *_get_icon_from_uri (gchar *uri)
         return NULL;
     }
 
-    /* index 25 is the beginning of the BT address */
-    /* and 17 is the length of the BT address */
-    memcpy (key + 25, uri + 8, 17);
+    /* copy BDA from URI to the GCONF key */
+    memcpy (key + BT_GCONF_DEVICE_ADDR_INDEX, uri + BT_URI_BDA_INDEX,
+            BT_BDA_LENGTH);
 
     ret = gconf_client_get_string (gconf_client, key, NULL);
 
@@ -334,70 +340,25 @@ static gchar *_get_icon_from_uri (gchar *uri)
 }
 
 
-/* TODO: works as long as you have one bt device locally, but when you have
-   multiple devices, you need to know which one is paired to the remote
-   device */
 static gchar *_obex_addr_to_display_name(gchar *obex_addr)
 {
-    DBusConnection *conn;
-    DBusMessage *msg, *ret;
-    DBusMessageIter iter;
-    DBusError error;
-    char *tmp, *ret_str = NULL;
+    GConfClient *gconf_client;
+    gchar *ret = NULL;
+    gchar key[] = BT_GCONF_DEVICE "name";
 
+    g_assert (obex_addr != NULL);
+    gconf_client = gconf_client_get_default ();
 
-    dbus_error_init(&error);
-    conn = dbus_bus_get_private (DBUS_BUS_SYSTEM, &error);
-
-    if (!conn) {
-        dbus_error_free(&error);
-
+    if (!gconf_client) {
         return NULL;
     }
 
-    dbus_connection_set_exit_on_disconnect (conn, FALSE);
+    /* copy BDA to the GCONF key */
+    memcpy (key + BT_GCONF_DEVICE_ADDR_INDEX, obex_addr, BT_BDA_LENGTH);
 
-    msg = dbus_message_new_method_call ("org.bluez", "/org/bluez/hci0",
-                                        "org.bluez.Adapter", "GetRemoteName");
+    ret = gconf_client_get_string (gconf_client, key, NULL);
 
-    if (!msg)
-        goto escape;
+    g_object_unref (gconf_client);
 
-
-    dbus_message_iter_init_append (msg, &iter);
-
-    dbus_message_iter_append_basic (&iter, DBUS_TYPE_STRING, &obex_addr);
-
-
-    dbus_error_init (&error);
-    ret = dbus_connection_send_with_reply_and_block (conn, msg, -1, &error);
-    dbus_message_unref (msg);
-
-    if (dbus_error_is_set (&error)) {
-        dbus_error_free (&error);
-
-        goto escape;
-    }
-
-
-    if (dbus_message_iter_init (ret, &iter)) {
-        if (dbus_message_iter_get_arg_type (&iter) == DBUS_TYPE_STRING) {
-            dbus_message_iter_get_basic (&iter, &tmp);
-
-            if (tmp) {
-                ret_str = g_strdup (tmp);
-            }
-        }
-    }
-
-
-    dbus_message_unref (ret);
-
-
-    escape:
-
-    dbus_connection_close (conn);
-    dbus_connection_unref (conn);
-
-    return ret_str;
+    return ret;
 }
