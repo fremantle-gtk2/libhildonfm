@@ -1,3 +1,9 @@
+libhildonfm (1:2.28.22+0cssu4+thumb0) unstable; urgency=low
+
+  * Thumb2 compiled
+
+ -- Ivaylo Dimitrov <freemangordon@abv.bg>  Sat, 13 Jul 2013 11:17:33 +0300
+
 libhildonfm (1:2.28.22+0cssu4) unstable; urgency=low
 
   * Show correct name for "Bluetooth"
